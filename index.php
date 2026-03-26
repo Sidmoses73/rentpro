@@ -1,0 +1,2078 @@
+<?php
+session_start();
+require_once __DIR__ . '/includes/config.php';
+
+// Check maintenance mode
+checkMaintenanceMode($pdo);
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RentPro - Professional Rent Management & Automated Receipt Software</title>
+    <meta name="description" content="Streamline your property management with RentPro. Automate rent collection, generate instant receipts, and send WhatsApp payment alerts.">
+    <meta name="keywords" content="rent management software, property management, automated receipts, landlord tools">
+    <meta name="author" content="RentPro Team">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://yourdomain.com/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourdomain.com/">
+    <meta property="og:title" content="RentPro - Professional Rent Management Software">
+    <meta property="og:description" content="Automate your rental business with professional receipts, WhatsApp integration, and smart due alerts.">
+    <meta property="og:image" content="https://yourdomain.com/images/og-share-image.png">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://yourdomain.com/">
+    <meta property="twitter:title" content="RentPro - Professional Rent Management Software">
+    <meta property="twitter:description" content="Automate your rental business with professional receipts, WhatsApp integration, and smart due alerts.">
+    <meta property="twitter:image" content="https://yourdomain.com/images/og-share-image.png">
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>RentPro - Professional Rent Management Software</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-blue: #3498db;
+            --primary-red: #e74c3c;
+            --dark-blue: #2980b9;
+            --dark-red: #c0392b;
+            --light-gray: #f5f7fa;
+            --dark-gray: #2c3e50;
+            --gradient-primary: linear-gradient(135deg, #3498db, #e74c3c);
+            --gradient-dark: linear-gradient(135deg, #2980b9, #c0392b);
+            --shadow-sm: 0 5px 15px rgba(0,0,0,0.05);
+            --shadow-md: 0 10px 30px rgba(0,0,0,0.1);
+            --shadow-lg: 0 15px 40px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: var(--light-gray);
+        }
+
+        /* Header Styles */
+        .header {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--gradient-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-red);
+        }
+
+        .logo-text span {
+            color: var(--primary-blue);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark-gray);
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--light-gray);
+        }
+
+        .login-btn {
+            background: var(--gradient-primary);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        /* Mobile Menu Styles */
+        .menu-toggle {
+            display: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--dark-gray);
+        }
+
+        /* Hero Slider Styles */
+        .hero-slider {
+            position: relative;
+            height: 80vh;
+            overflow: hidden;
+            margin-top: 70px;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 2rem;
+            text-align: center;
+            color: white;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+        .slide-1 {
+            background: linear-gradient(rgba(52, 152, 219, 0.8), rgba(231, 76, 60, 0.8)), url('https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .slide-2 {
+            background: linear-gradient(rgba(41, 128, 185, 0.8), rgba(192, 57, 43, 0.8)), url('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1974&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .slide-3 {
+            background: linear-gradient(rgba(26, 188, 156, 0.8), rgba(52, 152, 219, 0.8)), url('https://images.unsplash.com/photo-1570129477492-45c003edd2be?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .slide-content {
+            max-width: 800px;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 3rem;
+            border-radius: 15px;
+            backdrop-filter: blur(5px);
+        }
+
+        .slide h1 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .slide p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background-color: white;
+            color: var(--primary-blue);
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .cta-btn:hover {
+            background-color: var(--dark-blue);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .slider-nav {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+        }
+
+        .slider-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .slider-dot.active {
+            background-color: white;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 5rem 2rem;
+            background-color: white;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background-color: var(--light-gray);
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--dark-gray);
+        }
+
+        /* Pricing Section - New */
+        .pricing {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.05"><circle cx="50" cy="50" r="40" fill="none" stroke="white" stroke-width="2"/><circle cx="50" cy="50" r="20" fill="none" stroke="white" stroke-width="2"/></svg>') repeat;
+            background-size: 100px 100px;
+            animation: movePricing 30s linear infinite;
+        }
+
+        @keyframes movePricing {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(100px) translateY(100px); }
+        }
+
+        .pricing-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 30px 50px rgba(0,0,0,0.2);
+        }
+
+        .pricing-card.popular {
+            transform: scale(1.05);
+            border: 3px solid #FFD700;
+            box-shadow: 0 20px 40px rgba(255,215,0,0.2);
+            z-index: 3;
+        }
+
+        .pricing-card.popular:hover {
+            transform: scale(1.05) translateY(-15px);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: 20px;
+            right: -30px;
+            background: #FFD700;
+            color: #333;
+            padding: 5px 40px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transform: rotate(45deg);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .pricing-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            color: white;
+            font-size: 2rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        .pricing-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .pricing-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            line-height: 1;
+        }
+
+        .pricing-price span {
+            font-size: 1rem;
+            font-weight: 400;
+            color: #666;
+        }
+
+        .pricing-currency {
+            font-size: 1.5rem;
+            vertical-align: super;
+        }
+
+        .pricing-period {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .pricing-features li {
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #4a5568;
+        }
+
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-features li i.fa-check {
+            color: #48bb78;
+            width: 20px;
+            font-size: 1.1rem;
+        }
+
+        .pricing-features li i.fa-times {
+            color: #f56565;
+            width: 20px;
+            font-size: 1.1rem;
+        }
+
+        .pricing-features li i.fa-star {
+            color: #FFD700;
+            width: 20px;
+            font-size: 1.1rem;
+        }
+
+        .pricing-btn {
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            width: 100%;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .pricing-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .pricing-btn.popular {
+            background: #FFD700;
+            color: #333;
+        }
+
+        .pricing-note {
+            text-align: center;
+            margin-top: 3rem;
+            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+        }
+
+        .pricing-note a {
+            color: #FFD700;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .pricing-note a:hover {
+            text-decoration: underline;
+        }
+
+        /* Testimonials Section - What Landlord Says */
+        .testimonials {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .testimonials::before {
+            content: '"';
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 300px;
+            font-family: Georgia, serif;
+            color: rgba(52, 152, 219, 0.1);
+            z-index: 1;
+        }
+
+        .testimonials-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+            transition: all 0.5s ease;
+        }
+
+        .testimonial-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(52, 152, 219, 0.1);
+            position: relative;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-10px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .testimonial-card::before {
+            content: '"';
+            position: absolute;
+            top: 10px;
+            left: 20px;
+            font-size: 60px;
+            font-family: Georgia, serif;
+            color: var(--primary-blue);
+            opacity: 0.2;
+        }
+
+        .testimonial-rating {
+            color: #ffc107;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .testimonial-text {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            position: relative;
+            z-index: 1;
+            flex-grow: 1;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-top: 1px solid #eee;
+            padding-top: 1rem;
+            margin-top: auto;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--gradient-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .author-info h4 {
+            font-size: 1.1rem;
+            color: var(--dark-gray);
+            margin-bottom: 0.2rem;
+        }
+
+        .author-info p {
+            font-size: 0.85rem;
+            color: #777;
+        }
+
+        .testimonial-nav {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 3rem;
+        }
+
+        .testimonial-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            border: none;
+            box-shadow: var(--shadow-sm);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--primary-blue);
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .testimonial-btn:hover:not(:disabled) {
+            background: var(--gradient-primary);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .testimonial-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .testimonial-dots {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .testimonial-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ccc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .testimonial-dot.active {
+            background: var(--gradient-primary);
+            transform: scale(1.3);
+        }
+
+        /* Demo Section - How RentPro Works */
+        .demo-section {
+            padding: 5rem 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demo-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" opacity="0.1"><path d="M20 20 L80 20 L80 80 L20 80 Z" fill="none" stroke="white" stroke-width="2"/><circle cx="50" cy="50" r="15" fill="none" stroke="white" stroke-width="2"/></svg>') repeat;
+            background-size: 50px 50px;
+            animation: moveBackground 20s linear infinite;
+        }
+
+        @keyframes moveBackground {
+            0% { transform: translateX(0) translateY(0); }
+            100% { transform: translateX(50px) translateY(50px); }
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 2;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .demo-header h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            display: inline-block;
+        }
+
+        .demo-header h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(90deg, #fff, #ffd700);
+            border-radius: 2px;
+        }
+
+        .demo-header p {
+            font-size: 1.3rem;
+            opacity: 0.95;
+            max-width: 700px;
+            margin: 2rem auto 0;
+        }
+
+        .demo-timeline {
+            position: relative;
+            padding: 2rem 0;
+        }
+
+        .demo-timeline::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2), rgba(255,255,255,0.8), rgba(255,255,255,0.2));
+            border-radius: 2px;
+        }
+
+        .demo-step {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .demo-step:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .demo-step-content {
+            width: 45%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .demo-step-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0));
+            border-radius: 20px;
+            pointer-events: none;
+        }
+
+        .demo-step-content:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+
+        .demo-step-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .demo-step-icon i {
+            font-size: 2rem;
+            color: #333;
+        }
+
+        .demo-step-number {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #333;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+        }
+
+        .demo-step-content h3 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: #FFD700;
+        }
+
+        .demo-step-content p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .demo-step-connector {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-weight: bold;
+            z-index: 3;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .demo-features-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1.5rem;
+            margin-top: 4rem;
+            padding-top: 3rem;
+            border-top: 2px dashed rgba(255,255,255,0.3);
+        }
+
+        .demo-feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .demo-feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .demo-feature-card i {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #FFD700;
+        }
+
+        .demo-feature-card h4 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .demo-feature-card p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .demo-cta {
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .demo-cta-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #333;
+            padding: 1rem 3rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .demo-cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .demo-cta-button i {
+            transition: transform 0.3s ease;
+        }
+
+        .demo-cta-button:hover i {
+            transform: translateX(5px);
+        }
+
+        /* Footer */
+        .footer {
+            background: linear-gradient(135deg, var(--dark-blue), var(--dark-red));
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-column a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column a:hover {
+            color: white;
+        }
+
+        .copyright {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .copyright a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .copyright a:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== MOBILE RESPONSIVE STYLES ===== */
+        
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 15px;
+                height: 60px;
+            }
+
+            .logo-icon {
+                width: 35px;
+                height: 35px;
+                font-size: 12px;
+            }
+
+            .logo-text {
+                font-size: 20px;
+            }
+
+            .menu-toggle {
+                display: block;
+                z-index: 1001;
+            }
+
+            .nav-links {
+                position: fixed;
+                top: 60px;
+                left: -100%;
+                width: 100%;
+                height: calc(100vh - 60px);
+                background: white;
+                flex-direction: column;
+                padding: 2rem;
+                transition: left 0.3s ease;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+                overflow-y: auto;
+                gap: 20px;
+            }
+
+            .nav-links.active {
+                left: 0;
+            }
+
+            .nav-links a {
+                font-size: 18px;
+                padding: 15px;
+                width: 100%;
+                text-align: center;
+                border-bottom: 1px solid #eee;
+            }
+
+            .nav-links a:last-child {
+                border-bottom: none;
+            }
+
+            .login-btn {
+                display: inline-block;
+                width: auto;
+                margin-top: 10px;
+                padding: 12px 30px;
+            }
+
+            .hero-slider {
+                height: 60vh;
+                margin-top: 60px;
+            }
+
+            .slide h1 {
+                font-size: 2.2rem;
+            }
+
+            .features {
+                padding: 3rem 1.5rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            /* Pricing Section Responsive */
+            .pricing {
+                padding: 3rem 1.5rem;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .pricing-card {
+                max-width: 400px;
+                margin: 0 auto;
+                padding: 2rem;
+            }
+
+            .pricing-card.popular {
+                transform: scale(1);
+            }
+
+            .pricing-card.popular:hover {
+                transform: scale(1) translateY(-15px);
+            }
+
+            .pricing-price {
+                font-size: 2.5rem;
+            }
+
+            .pricing-features {
+                font-size: 0.95rem;
+            }
+
+            .pricing-note {
+                font-size: 1rem;
+            }
+
+            .testimonials {
+                padding: 3rem 1.5rem;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+
+            .testimonial-card {
+                padding: 1.5rem;
+            }
+
+            /* Demo Section Responsive */
+            .demo-section {
+                padding: 3rem 1.5rem;
+            }
+
+            .demo-header h2 {
+                font-size: 2.2rem;
+            }
+
+            .demo-header p {
+                font-size: 1.1rem;
+                padding: 0 1rem;
+            }
+
+            .demo-timeline::before {
+                left: 30px;
+            }
+
+            .demo-step,
+            .demo-step:nth-child(even) {
+                flex-direction: column;
+                align-items: flex-start;
+                margin-left: 60px;
+            }
+
+            .demo-step-content {
+                width: 100%;
+                margin-bottom: 1rem;
+            }
+
+            .demo-step-connector {
+                left: 30px;
+                transform: translateX(-50%);
+            }
+
+            .demo-features-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .demo-cta-button {
+                padding: 0.8rem 2rem;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-container {
+                padding: 0 12px;
+                height: 55px;
+            }
+
+            .logo-text {
+                font-size: 16px;
+            }
+
+            .hero-slider {
+                height: 50vh;
+                margin-top: 55px;
+            }
+
+            .slide h1 {
+                font-size: 1.5rem;
+            }
+
+            .features {
+                padding: 2rem 1rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+
+            .testimonials {
+                padding: 2rem 1rem;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .testimonial-card {
+                padding: 1.2rem;
+            }
+
+            .testimonial-rating {
+                font-size: 1rem;
+            }
+
+            .testimonial-text {
+                font-size: 0.9rem;
+                line-height: 1.6;
+            }
+
+            .author-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            .testimonial-nav {
+                margin-top: 2rem;
+            }
+
+            .testimonial-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+
+            /* Pricing Section */
+            .pricing {
+                padding: 2rem 1rem;
+            }
+
+            .pricing-grid {
+                gap: 1rem;
+            }
+
+            .pricing-card {
+                padding: 1.5rem;
+            }
+
+            .pricing-icon {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+
+            .pricing-name {
+                font-size: 1.3rem;
+            }
+
+            .pricing-price {
+                font-size: 2rem;
+            }
+
+            .pricing-features li {
+                font-size: 0.9rem;
+                padding: 0.6rem 0;
+            }
+
+            .pricing-btn {
+                padding: 0.8rem;
+                font-size: 1rem;
+            }
+
+            .pricing-note {
+                font-size: 0.9rem;
+            }
+
+            /* Demo Section Mobile */
+            .demo-section {
+                padding: 2rem 1rem;
+            }
+
+            .demo-header h2 {
+                font-size: 1.8rem;
+            }
+
+            .demo-header p {
+                font-size: 1rem;
+            }
+
+            .demo-step-content {
+                padding: 1.5rem;
+            }
+
+            .demo-step-icon {
+                width: 50px;
+                height: 50px;
+            }
+
+            .demo-step-icon i {
+                font-size: 1.5rem;
+            }
+
+            .demo-step-number {
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
+            }
+
+            .demo-step-content h3 {
+                font-size: 1.4rem;
+            }
+
+            .demo-step-content p {
+                font-size: 0.95rem;
+            }
+
+            .demo-features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .demo-cta-button {
+                padding: 0.7rem 1.5rem;
+                font-size: 0.9rem;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .pricing-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+
+            .pricing-card {
+                padding: 1.5rem;
+            }
+
+            .pricing-price {
+                font-size: 2.2rem;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .demo-features-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav-container">
+            <a href="#" class="logo">
+                <img src="logo.png" alt="Sidmoses Technology Logo" style="height: 100px; width: auto; margin-right: 10px;">
+                <div class="logo-text">Rent<span>Pro</span></div>
+            </a>
+            
+            <div class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </div>
+
+            <div class="nav-links" id="navLinks">
+                <a href="#features">Features</a>
+                <a href="#pricing">Pricing</a>
+                <a href="#demo">How It Works</a>
+                <a href="#contact">Contact</a>
+                <a href="login.php" class="login-btn">Login</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Slider -->
+    <section class="hero-slider">
+        <div class="slide slide-1 active">
+            <div class="slide-content">
+                <h1>Automated Rent Management</h1>
+                <p>Streamline rent collection, track payments, and manage properties efficiently with RentPro's comprehensive solution.</p>
+                <a href="login.php" class="cta-btn">Get Started Today</a>
+            </div>
+        </div>
+        <div class="slide slide-2">
+            <div class="slide-content">
+                <h1>Instant Receipt Generation</h1>
+                <p>Automatically generate and send professional receipts for every payment with just one click.</p>
+                <a href="#features" class="cta-btn">Learn More</a>
+            </div>
+        </div>
+        <div class="slide slide-3">
+            <div class="slide-content">
+                <h1>Smart Rent Due Alerts</h1>
+                <p>Never miss a payment with automated alerts for tenants and landlords before rent is due.</p>
+                <a href="#demo" class="cta-btn">See How It Works</a>
+            </div>
+        </div>
+        <div class="slider-nav">
+            <div class="slider-dot active" data-slide="0"></div>
+            <div class="slider-dot" data-slide="1"></div>
+            <div class="slider-dot" data-slide="2"></div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <h2 class="section-title">Key Features</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <h3>Automated Receipt Generation</h3>
+                <p>Instantly generate professional receipts for all rent payments. Customize templates and automatically send to tenants via email or WhatsApp.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <h3>WhatsApp Integration</h3>
+                <p>Send payment reminders, receipts, and notifications directly to tenants via WhatsApp. Quick, convenient, and highly effective.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <h3>Rent Due Alerts</h3>
+                <p>Automatically notify tenants and landlords before rent is due. Customize alert timing and delivery methods.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3>Mobile-First Design</h3>
+                <p>Access all features from any device. Our responsive design ensures seamless experience on smartphones, tablets, and desktops.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3>Payment Scheduling</h3>
+                <p>Set up recurring payment schedules and automate the entire rent collection process with customizable due dates.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Financial Tracking</h3>
+                <p>Monitor payment history, track pending amounts, and generate comprehensive financial reports with visual analytics.</p>
+            </div>
+        </div>
+    </section>
+
+        <!-- Pricing Section - New -->
+    <section class="pricing" id="pricing">
+        <div class="pricing-container">
+            <div class="demo-header">
+                <h2 style="color: white;">Simple & Transparent Pricing</h2>
+                <p style="color: rgba(255,255,255,0.9);">Choose the perfect plan for your property management needs</p>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Free Plan -->
+                <div class="pricing-card">
+                    <div class="pricing-icon">
+                        <i class="fas fa-smile"></i>
+                    </div>
+                    <div class="pricing-name">Free</div>
+                    <div class="pricing-price">
+                        <span class="pricing-currency">₦</span>0<span>/mo</span>
+                    </div>
+                    <div class="pricing-period">forever free</div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> 1 Property</li>
+                        <li><i class="fas fa-check"></i> 1 Tenant</li>
+                        <li><i class="fas fa-check"></i> Automated Receipts</li>
+                        <li><i class="fas fa-check"></i> WhatsApp Integration</li>
+                        <li><i class="fas fa-times"></i> Email Support</li>
+                        <li><i class="fas fa-times"></i> Advanced Analytics</li>
+                        <li><i class="fas fa-times"></i> Priority Support</li>
+                    </ul>
+                    <a href="login.php?signup=free" class="pricing-btn">Start Free</a>
+                </div>
+
+                <!-- Basic Plan -->
+                <div class="pricing-card">
+                    <div class="pricing-icon">
+                        <i class="fas fa-home"></i>
+                    </div>
+                    <div class="pricing-name">Basic</div>
+                    <div class="pricing-price">
+                        <span class="pricing-currency">₦</span>50,000<span>/yr</span>
+                    </div>
+                    <div class="pricing-period">billed yearly</div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> Up to 3 Properties</li>
+                        <li><i class="fas fa-check"></i> Up to 5 Tenants</li>
+                        <li><i class="fas fa-check"></i> Automated Receipts</li>
+                        <li><i class="fas fa-check"></i> WhatsApp Integration</li>
+                        <li><i class="fas fa-check"></i> Email Support</li>
+                        <li><i class="fas fa-times"></i> Advanced Analytics</li>
+                        <li><i class="fas fa-times"></i> Priority Support</li>
+                    </ul>
+                    <a href="mailto:webmaster@sidmosestech.com?subject=I'm%20interested%20in%20the%20Basic%20Plan&body=Hello%2C%0A%0AI%20would%20like%20to%20subscribe%20to%20the%20RentPro%20Basic%20Plan%20(%E2%82%A6%2050%2C000%2Fyear).%0A%0APlease%20provide%20me%20with%20more%20information%20on%20how%20to%20get%20started.%0A%0AThank%20you." class="pricing-btn">Choose Basic Plan</a>
+                </div>
+
+                <!-- Professional Plan (Popular) -->
+                <div class="pricing-card popular">
+                    <div class="popular-badge">MOST POPULAR</div>
+                    <div class="pricing-icon">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div class="pricing-name">Professional</div>
+                    <div class="pricing-price">
+                        <span class="pricing-currency">₦</span>120,000<span>/yr</span>
+                    </div>
+                    <div class="pricing-period">billed yearly</div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-star" style="color: #FFD700;"></i> <strong>Up to 6 Properties</strong></li>
+                        <li><i class="fas fa-star" style="color: #FFD700;"></i> <strong>Up to 20 Tenants</strong></li>
+                        <li><i class="fas fa-check"></i> Automated Receipts</li>
+                        <li><i class="fas fa-check"></i> WhatsApp Integration</li>
+                        <li><i class="fas fa-check"></i> Rent Due Alerts</li>
+                        <li><i class="fas fa-check"></i> Advanced Analytics</li>
+                        <li><i class="fas fa-check"></i> Priority Support</li>
+                    </ul>
+                    <a href="mailto:webmaster@sidmosestech.com?subject=I'm%20interested%20in%20the%20Enterprise%20Plan&body=Hello%2C%0A%0AI%20would%20like%20to%20subscribe%20to%20the%20RentPro%20Enterprise%20Plan%20(%E2%82%A6%20120%2C000%2Fyear).%0A%0APlease%20provide%20me%20with%20more%20information%20on%20how%20to%20get%20started%20or%20discuss%20custom%20options.%0A%0AThank%20you." class="pricing-btn popular">Choose Professional Plan</a>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="pricing-card">
+                    <div class="pricing-icon">
+                        <i class="fas fa-city"></i>
+                    </div>
+                    <div class="pricing-name">Enterprise</div>
+                    <div class="pricing-price">
+                        <span class="pricing-currency">₦</span>200,000<span>/yr</span>
+                    </div>
+                    <div class="pricing-period">billed yearly</div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> 10 Properties</li>
+                        <li><i class="fas fa-check"></i> 40 Tenants</li>
+                        <li><i class="fas fa-check"></i> Automated Receipts</li>
+                        <li><i class="fas fa-check"></i> WhatsApp Integration</li>
+                        <li><i class="fas fa-check"></i> Custom Reports</li>
+                        <li><i class="fas fa-check"></i> customercare Access</li>
+                        <li><i class="fas fa-check"></i> Dedicated Account Manager</li>
+                    </ul>
+                    <a href="mailto:webmaster@sidmosestech.com?subject=I'm%20interested%20in%20the%20Enterprise%20Plan&body=Hello%2C%0A%0AI%20would%20like%20to%20subscribe%20to%20the%20RentPro%20Enterprise%20Plan%20(%E2%82%A6%20200%2C000%2Fyear).%0A%0APlease%20provide%20me%20with%20more%20information%20on%20how%20to%20get%20started%20or%20discuss%20custom%20options.%0A%0AThank%20you." class="pricing-btn">Contact Sales</a>
+                </div>
+            </div>
+
+            <div class="pricing-note">
+                <p>🎉 Save 20% with annual billing! <a href="mailto:webmaster@sidmosestech.com?subject=Inquiry%20about%20annual%20billing%20discount&body=Hello%2C%0A%0AI'm%20interested%20in%20the%2020%25%20annual%20billing%20discount%20for%20RentPro.%0APlease%20provide%20more%20information.%0A%0AThank%20you.">Contact us</a> for custom enterprise solutions.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- What Landlord Says Section - Testimonials (NO AUTO SLIDE) -->
+    <section class="testimonials">
+        <h2 class="section-title">What Landlords Say</h2>
+        <div class="testimonials-container">
+            <div class="testimonials-grid" id="testimonialsGrid">
+                <!-- Testimonial 1 -->
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"RentPro has revolutionized how I manage my 15 properties. The automated receipts and WhatsApp integration save me hours every week. Best investment I've made for my rental business!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">KL</div>
+                        <div class="author-info">
+                            <h4>Kunle Lawal</h4>
+                            <p>Property Owner, 15+ units</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 2 -->
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"The rent due alerts alone are worth it. Late payments have dropped by 80% since I started using RentPro. My tenants love the WhatsApp reminders and instant digital receipts."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">SM</div>
+                        <div class="author-info">
+                            <h4>Sarah Mitchell</h4>
+                            <p>Property Manager</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 3 -->
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"I was skeptical about another property management software, but RentPro exceeded my expectations. The financial tracking and reports make tax season a breeze. Highly recommended!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">OW</div>
+                        <div class="author-info">
+                            <h4>Olawale Williams</h4>
+                            <p>Real Estate Investor</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 4 -->
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"The mobile-first design is perfect for my busy lifestyle. I can manage everything from my phone - send reminders, track payments, and generate receipts on the go. Game changer!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">JO</div>
+                        <div class="author-info">
+                            <h4>Jude Okezie</h4>
+                            <p>Small Landlord, 5 properties</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 5 -->
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"Setting up recurring payments was a breeze. My tenants appreciate the automated reminders and I love seeing all my financial data in one place. Worth every penny!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">RK</div>
+                        <div class="author-info">
+                            <h4>Ruth King</h4>
+                            <p>Property Investor</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 6 -->
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"The customer support is outstanding! They helped me customize the receipt templates to match my brand. Now my tenants get professional receipts that look amazing."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">OB</div>
+                        <div class="author-info">
+                            <h4>Ogechukwu Brown</h4>
+                            <p>Luxury Property Manager</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 7 -->
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"Finally, a software that understands landlords! The payment scheduling and tracking features have simplified my life. No more spreadsheets and manual tracking!"</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">DJ</div>
+                        <div class="author-info">
+                            <h4>David Johnson</h4>
+                            <p>Full-time Landlord</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonial 8 -->
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <p class="testimonial-text">"I manage properties for multiple owners, and RentPro makes it easy to keep everything organized. The reporting features are fantastic for showing owners their property performance."</p>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">AN</div>
+                        <div class="author-info">
+                            <h4>Alex Nureni</h4>
+                            <p>Professional Property Manager</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Testimonial Navigation -->
+            <div class="testimonial-nav">
+                <button class="testimonial-btn" id="prevTestimonial" aria-label="Previous testimonials">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="testimonial-dots" id="testimonialDots">
+                    <span class="testimonial-dot active" data-index="0"></span>
+                    <span class="testimonial-dot" data-index="1"></span>
+                    <span class="testimonial-dot" data-index="2"></span>
+                </div>
+                <button class="testimonial-btn" id="nextTestimonial" aria-label="Next testimonials">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section - How RentPro Works -->
+    <section class="demo-section" id="demo">
+        <div class="demo-container">
+            <div class="demo-header">
+                <h2>How RentPro Works</h2>
+                <p>Our streamlined process makes rent management effortless for both landlords and tenants</p>
+            </div>
+
+            <!-- Timeline Steps -->
+            <div class="demo-timeline">
+                <!-- Step 1 -->
+                <div class="demo-step">
+                    <div class="demo-step-content">
+                        <div class="demo-step-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <span class="demo-step-number">1</span>
+                        <h3>Set Due Dates</h3>
+                        <p>Configure rent due dates and grace periods for each property. Set up recurring payment schedules and customize reminder timing to match your preferences.</p>
+                    </div>
+                    <div class="demo-step-connector">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="demo-step">
+                    <div class="demo-step-content">
+                        <div class="demo-step-icon">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <span class="demo-step-number">2</span>
+                        <h3>Auto Alerts</h3>
+                        <p>Automatic reminders are sent to tenants via WhatsApp and email before rent is due. Customize the frequency and timing of alerts to ensure timely payments.</p>
+                    </div>
+                    <div class="demo-step-connector">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="demo-step">
+                    <div class="demo-step-content">
+                        <div class="demo-step-icon">
+                            <i class="fas fa-money-check"></i>
+                        </div>
+                        <span class="demo-step-number">3</span>
+                        <h3>Receive Payments</h3>
+                        <p>Tenants can pay through multiple methods including bank transfer, card payments, and mobile money. All payments are automatically tracked and recorded.</p>
+                    </div>
+                    <div class="demo-step-connector">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="demo-step">
+                    <div class="demo-step-content">
+                        <div class="demo-step-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <span class="demo-step-number">4</span>
+                        <h3>Generate Receipts</h3>
+                        <p>Professional receipts are generated instantly for every payment. Customize templates with your logo and branding for a professional touch.</p>
+                    </div>
+                    <div class="demo-step-connector">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="demo-step">
+                    <div class="demo-step-content">
+                        <div class="demo-step-icon">
+                            <i class="fab fa-whatsapp"></i>
+                        </div>
+                        <span class="demo-step-number">5</span>
+                        <h3>Send via WhatsApp</h3>
+                        <p>Share receipts and payment confirmations directly to tenants via WhatsApp. Quick, convenient, and ensures tenants always have access to their payment history.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature Cards Grid -->
+            <div class="demo-features-grid">
+                <div class="demo-feature-card">
+                    <i class="fas fa-clock"></i>
+                    <h4>Real-time Tracking</h4>
+                    <p>Monitor payments as they happen</p>
+                </div>
+                <div class="demo-feature-card">
+                    <i class="fas fa-chart-pie"></i>
+                    <h4>Analytics</h4>
+                    <p>Visual reports and insights</p>
+                </div>
+                <div class="demo-feature-card">
+                    <i class="fas fa-shield-alt"></i>
+                    <h4>Secure</h4>
+                    <p>Bank-level data protection</p>
+                </div>
+                <div class="demo-feature-card">
+                    <i class="fas fa-users"></i>
+                    <h4>Multi-tenant</h4>
+                    <p>Manage multiple properties</p>
+                </div>
+                <div class="demo-feature-card">
+                    <i class="fas fa-sync-alt"></i>
+                    <h4>Auto-sync</h4>
+                    <p>Real-time updates across devices</p>
+                </div>
+            </div>
+
+            <!-- CTA Button -->
+            <div class="demo-cta">
+                <a href="login.php" class="demo-cta-button">
+                    Get Started Now <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer" id="contact">
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>RentPro</h3>
+                <p>Professional rent management software designed to simplify property management for landlords and property managers.</p>
+            </div>
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="#demo">How It Works</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                    <li><a href="login.php">Login</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Contact Info</h3>
+                <ul>
+                    <li><i class="fas fa-envelope"></i> webmaster@sidmosestech.com</li>
+                    <li><i class="fas fa-phone"></i> +234 (803) 318-7992</li>
+                    <li><i class="fas fa-map-marker-alt"></i> 21, Oremejila street, off Ajuwon Akute Road, Lagos</li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2026 RentPro. All rights reserved. Powered by <a href="https://sidmosestech.com" target="_blank" rel="noopener noreferrer">Sidmoses Technology</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile Menu Toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuToggle = document.getElementById('menuToggle');
+            const navLinks = document.getElementById('navLinks');
+            
+            if (menuToggle && navLinks) {
+                menuToggle.addEventListener('click', function() {
+                    navLinks.classList.toggle('active');
+                    // Toggle icon between bars and times
+                    const icon = this.querySelector('i');
+                    if (icon.classList.contains('fa-bars')) {
+                        icon.classList.remove('fa-bars');
+                        icon.classList.add('fa-times');
+                    } else {
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
+
+                // Close menu when clicking on a link
+                const links = navLinks.querySelectorAll('a');
+                links.forEach(link => {
+                    link.addEventListener('click', function() {
+                        navLinks.classList.remove('active');
+                        const icon = menuToggle.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    });
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('click', function(event) {
+                    if (!navLinks.contains(event.target) && !menuToggle.contains(event.target)) {
+                        navLinks.classList.remove('active');
+                        const icon = menuToggle.querySelector('i');
+                        icon.classList.remove('fa-times');
+                        icon.classList.add('fa-bars');
+                    }
+                });
+            }
+        });
+
+        // Hero Slider Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.slider-dot');
+            let currentSlide = 0;
+            const slideInterval = 5000; // 5 seconds
+            
+            function showSlide(n) {
+                slides.forEach(slide => slide.classList.remove('active'));
+                dots.forEach(dot => dot.classList.remove('active'));
+                
+                currentSlide = (n + slides.length) % slides.length;
+                
+                slides[currentSlide].classList.add('active');
+                dots[currentSlide].classList.add('active');
+            }
+            
+            function nextSlide() {
+                showSlide(currentSlide + 1);
+            }
+            
+            // Auto slide
+            let slideTimer = setInterval(nextSlide, slideInterval);
+            
+            // Dot navigation
+            dots.forEach(dot => {
+                dot.addEventListener('click', function() {
+                    clearInterval(slideTimer);
+                    showSlide(parseInt(this.getAttribute('data-slide')));
+                    slideTimer = setInterval(nextSlide, slideInterval);
+                });
+            });
+
+            // Pause on hover
+            const heroSlider = document.querySelector('.hero-slider');
+            if (heroSlider) {
+                heroSlider.addEventListener('mouseenter', () => {
+                    clearInterval(slideTimer);
+                });
+                
+                heroSlider.addEventListener('mouseleave', () => {
+                    slideTimer = setInterval(nextSlide, slideInterval);
+                });
+            }
+        });
+
+        // Testimonials Slider Functionality - Shows 4 at a time (NO AUTO SLIDE)
+        document.addEventListener('DOMContentLoaded', function() {
+            const testimonialCards = document.querySelectorAll('.testimonial-card');
+            const prevBtn = document.getElementById('prevTestimonial');
+            const nextBtn = document.getElementById('nextTestimonial');
+            const dots = document.querySelectorAll('.testimonial-dot');
+            
+            const cardsPerPage = 4;
+            const totalCards = testimonialCards.length;
+            const totalPages = Math.ceil(totalCards / cardsPerPage);
+            
+            let currentPage = 0;
+            
+            // Function to show testimonials for current page
+            function showTestimonialsPage(page) {
+                const start = page * cardsPerPage;
+                const end = start + cardsPerPage;
+                
+                // Hide all cards first
+                testimonialCards.forEach(card => {
+                    card.style.display = 'none';
+                });
+                
+                // Show cards for current page
+                for (let i = start; i < end && i < totalCards; i++) {
+                    testimonialCards[i].style.display = 'block';
+                }
+                
+                // Update dots
+                dots.forEach((dot, index) => {
+                    if (index === page) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                });
+                
+                // Update button states
+                if (prevBtn && nextBtn) {
+                    prevBtn.disabled = page === 0;
+                    nextBtn.disabled = page === totalPages - 1;
+                }
+                
+                currentPage = page;
+            }
+            
+            // Initialize - show first page
+            showTestimonialsPage(0);
+            
+            // Previous button click
+            if (prevBtn) {
+                prevBtn.addEventListener('click', function() {
+                    if (currentPage > 0) {
+                        showTestimonialsPage(currentPage - 1);
+                    }
+                });
+            }
+            
+            // Next button click
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function() {
+                    if (currentPage < totalPages - 1) {
+                        showTestimonialsPage(currentPage + 1);
+                    }
+                });
+            }
+            
+            // Dot navigation
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', function() {
+                    showTestimonialsPage(index);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
