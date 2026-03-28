@@ -620,7 +620,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $show_form) {
 <body>
     <!-- Back to Home Button -->
     <div class="back-home">
-        <a href="index.php">
+        <a href="index.html">
             <i class="fas fa-arrow-left"></i>
             <span>Back to Home</span>
         </a>
